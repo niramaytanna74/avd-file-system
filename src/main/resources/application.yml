@@ -18,5 +18,5 @@ server:
   port: 8080
 
 jwt:
-  secret: "your-very-secret-key"
+  secret: "Qk1vQ2J4b3J2b2d6d2p3b2ZyQ2J4b3J2b2d6d2p3b2ZyQk1vQ2J4b3J2b2d6d2p3b2ZyQk1vQ2J4b3J2b2d6d2p3b2ZyQk1vQ2J4b3I="
   expiration-ms: 86400000 # 1 day

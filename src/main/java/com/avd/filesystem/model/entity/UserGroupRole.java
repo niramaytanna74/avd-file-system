@@ -21,8 +21,8 @@ public class UserGroupRole extends Auditable {
     private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "group_id", nullable = false)
-    private Group group;
+    @JoinColumn(name = "user_group_id", nullable = false)
+    private UserGroup userGroup;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

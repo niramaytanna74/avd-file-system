@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>FileSystem - Dashboard</title>
-    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
@@ -24,7 +24,18 @@
             <h3>Download Files</h3>
             <div id="fileList"></div>
         </div>
+        <div id="groupRequestSection" style="display:none; margin-top:24px;">
+            <h3>Request to Join a Group</h3>
+            <form id="groupRequestForm">
+                <label for="groupSelect">Select Group:</label>
+                <select id="groupSelect" name="groupId" required></select>
+                <button type="submit">Request Access</button>
+            </form>
+            <div id="groupRequestMsg"></div>
+            <h4>Your Group Join Requests</h4>
+            <div id="groupRequestStatus"></div>
+        </div>
     </div>
-    <script src="/static/dashboard.js"></script>
+    <script src="dashboard.js"></script>
 </body>
 </html>

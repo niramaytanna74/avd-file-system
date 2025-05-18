@@ -7,9 +7,8 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class UserGroupRoleDto {
+public class UserGroupDto {
     private Long id;
-    private Long userId;
-    private Long userGroupId;
-    private String role;
+    private String name;
+    private String description;
 }

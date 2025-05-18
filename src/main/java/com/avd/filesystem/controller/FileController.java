@@ -17,8 +17,8 @@ public class FileController {
     @PostMapping("/upload")
     public ResponseEntity<?> uploadFile(@RequestParam("file") MultipartFile file,
                                         @RequestParam("mode") String mode,
-                                        @RequestParam("groupId") Long groupId,
-                                        @RequestBody FileDto fileDto,
+                                        @RequestParam("userGroupId") Long groupId,
+                                        @RequestPart("fileDto") FileDto fileDto,
                                         @RequestParam(value = "bundleName", required = false) String bundleName) {
         if ("SINGLE".equalsIgnoreCase(mode)) {
             return ResponseEntity.ok(fileService.uploadFile(file, fileDto, groupId));

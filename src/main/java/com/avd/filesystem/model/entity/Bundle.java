@@ -26,9 +26,10 @@ public class Bundle extends Auditable {
     private User uploadedBy;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "group_id", nullable = false)
-    private Group group;
+    @JoinColumn(name = "user_group_id", nullable = false)
+    private UserGroup userGroup;
 
     @OneToMany(mappedBy = "bundle", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     private Set<File> files = new HashSet<>();
 }

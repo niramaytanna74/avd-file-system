@@ -12,4 +12,5 @@ public interface UserService {
     List<UserDto> getUsersByGroup(Long groupId);
     Optional<User> findByUsername(String username);
     Optional<User> findByEmail(String email);
+    List<UserDto> getAllUsers();
 }

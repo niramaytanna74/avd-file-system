@@ -39,8 +39,8 @@ public class File extends Auditable {
     private User uploadedBy;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "group_id", nullable = false)
-    private Group group;
+    @JoinColumn(name = "user_group_id", nullable = false)
+    private UserGroup userGroup;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "bundle_id")

@@ -7,6 +7,52 @@ fetch('/users/me', { headers: { 'Authorization': 'Bearer ' + jwt } })
     .then(res => res.json())
     .then(user => {
         showRoleSections(user.role);
+        if (user.role !== 'SUPERADMIN' && (!user.groupIds || user.groupIds.length === 0)) {
+            document.getElementById('fileSection').style.display = 'none';
+            const groupRequestSection = document.getElementById('groupRequestSection');
+            groupRequestSection.style.display = '';
+            loadAvailableGroups();
+            // Check if user already has a pending or approved request
+            fetch('/api/access-requests/user/' + user.id, { headers: { 'Authorization': 'Bearer ' + jwt } })
+                .then(res => res.json())
+                .then(function(requests) {
+                    let hasActiveRequest = false;
+                    if (requests && requests.length) {
+                        for (var i = 0; i < requests.length; i++) {
+                            if (requests[i].status === 'PENDING' || requests[i].status === 'APPROVED') {
+                                hasActiveRequest = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (hasActiveRequest) {
+                        document.getElementById('groupRequestForm').style.display = 'none';
+                        document.getElementById('groupRequestMsg').innerText = 'You have already requested to join a group.';
+                    } else {
+                        document.getElementById('groupRequestForm').style.display = '';
+                        document.getElementById('groupRequestMsg').innerText = '';
+                        document.getElementById('groupRequestForm').onsubmit = function(e) {
+                            e.preventDefault();
+                            const groupId = document.getElementById('groupSelect').value;
+                            fetch('/api/access-requests?groupId=' + groupId + '&userId=' + user.id, {
+                                method: 'POST',
+                                headers: { 'Authorization': 'Bearer ' + jwt },
+                            })
+                            .then(res => res.json())
+                            .then(data => {
+                                document.getElementById('groupRequestMsg').innerText = 'Request submitted!';
+                                loadUserRequests(user.id);
+                                document.getElementById('groupRequestForm').style.display = 'none';
+                            })
+                            .catch(() => {
+                                document.getElementById('groupRequestMsg').innerText = 'Failed to submit request.';
+                            });
+                        };
+                    }
+                    loadUserRequests(user.id);
+                });
+            return;
+        }
         loadFiles();
     })
     .catch(() => window.location.href = 'login.html');
@@ -32,7 +78,7 @@ uploadForm.addEventListener('submit', async (e) => {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('mode', 'SINGLE');
-    formData.append('groupId', 1); // TODO: select group
+    formData.append('userGroupId', 1); // TODO: select user group
     formData.append('fileDto', JSON.stringify({
         description: uploadForm.description.value,
         fileType: uploadForm.fileType.value,
@@ -80,4 +126,38 @@ window.downloadFile = function(id, filename) {
         a.remove();
     })
     .catch(() => alert('Download failed or no access'));
+}
+
+function loadAvailableGroups() {
+    fetch('/user-groups', { headers: { 'Authorization': 'Bearer ' + jwt } })
+        .then(res => res.json())
+        .then(groups => {
+            const select = document.getElementById('groupSelect');
+            select.innerHTML = '';
+            groups.forEach(g => {
+                const opt = document.createElement('option');
+                opt.value = g.id;
+                opt.textContent = g.name;
+                select.appendChild(opt);
+            });
+        });
+}
+
+function loadUserRequests(userId) {
+    fetch('/api/access-requests/user/' + userId, { headers: { 'Authorization': 'Bearer ' + jwt } })
+        .then(res => res.json())
+        .then(function(requests) {
+            var statusDiv = document.getElementById('groupRequestStatus');
+            if (!requests.length) {
+                statusDiv.innerHTML = '<em>No requests yet.</em>';
+                return;
+            }
+            var html = '<ul>';
+            for (var i = 0; i < requests.length; i++) {
+                var r = requests[i];
+                html += '<li>Group: ' + (r.userGroupId || r.groupId) + ' | Status: ' + r.status + (r.reviewedAt ? ' (Reviewed)' : '') + '</li>';
+            }
+            html += '</ul>';
+            statusDiv.innerHTML = html;
+        });
 }

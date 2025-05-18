@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Access Management</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h2>Admin Access Management</h2>
+        <div id="adminAccessMsg" class="info"></div>
+        <div id="fileAccessSection">
+            <h3>Files in Your Groups</h3>
+            <table id="adminFileTable" class="dashboard-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Filename</th>
+                        <th>Uploader</th>
+                        <th>Group</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="adminFileTableBody"></tbody>
+            </table>
+        </div>
+        <div id="userAccessSection">
+            <h3>Users in Your Groups</h3>
+            <table id="adminUserTable" class="dashboard-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Username</th>
+                        <th>Email</th>
+                        <th>Group</th>
+                        <th>Role</th>
+                    </tr>
+                </thead>
+                <tbody id="adminUserTableBody"></tbody>
+            </table>
+        </div>
+        <div id="accessRequestsSection" style="margin-top:32px;">
+            <h3>Pending Group Join Requests</h3>
+            <table id="accessRequestsTable" class="dashboard-table">
+                <thead>
+                    <tr>
+                        <th>Request ID</th>
+                        <th>User</th>
+                        <th>Group</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="accessRequestsTableBody"></tbody>
+            </table>
+        </div>
+        <a href="dashboard.html">Back to Dashboard</a>
+    </div>
+    <script src="admin-access.js"></script>
+</body>
+</html>

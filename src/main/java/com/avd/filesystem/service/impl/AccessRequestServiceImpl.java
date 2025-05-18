@@ -34,7 +34,7 @@ public class AccessRequestServiceImpl implements AccessRequestService {
     @Override
     public List<AccessRequestDto> getAccessRequestsForAdmin(Long groupId) {
         return accessRequestRepository.findAll().stream()
-                .filter(r -> r.getFile().getGroup().getId().equals(groupId))
+                .filter(r -> r.getFile().getUserGroup().getId().equals(groupId))
                 .map(this::toDto)
                 .collect(Collectors.toList());
     }

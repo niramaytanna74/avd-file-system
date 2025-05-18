@@ -7,6 +7,8 @@ import com.avd.filesystem.repository.UserRepository;
 import com.avd.filesystem.repository.UserGroupRoleRepository;
 import com.avd.filesystem.service.UserService;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.util.CollectionUtils;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -50,9 +52,14 @@ public class UserServiceImpl implements UserService {
     public List<UserDto> getUsersByGroup(Long groupId) {
         List<UserGroupRole> roles = userGroupRoleRepository.findAll();
         return roles.stream()
-                .filter(r -> r.getGroup().getId().equals(groupId))
+                .filter(r -> r.getUserGroup().getId().equals(groupId))
                 .map(r -> toDto(r.getUser()))
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<UserDto> getAllUsers() {
+        return userRepository.findAll().stream().map(this::toDto).collect(Collectors.toList());
     }
 
     @Override
@@ -66,8 +73,21 @@ public class UserServiceImpl implements UserService {
     }
 
     private UserDto toDto(User user) {
+        if (user == null) {
+            return null;
+        }
+        // Convert UserGroupRole to Set<Long> for groupIds
+        if(CollectionUtils.isEmpty(user.getUserGroupRoles())) {
+            return UserDto.builder()
+                    .id(user.getId())
+                    .username(user.getUsername())
+                    .email(user.getEmail())
+                    .role(user.getRole().name())
+                    .groupIds(Set.of())
+                    .build();
+        }
         Set<Long> groupIds = user.getUserGroupRoles().stream()
-                .map(r -> r.getGroup().getId())
+                .map(r -> r.getUserGroup().getId())
                 .collect(Collectors.toSet());
         return UserDto.builder()
                 .id(user.getId())

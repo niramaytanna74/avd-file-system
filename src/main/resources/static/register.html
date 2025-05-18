@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <title>FileSystem - Register</title>
-    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body class="register-page">
     <div class="container">
         <h2>Register</h2>
         <form id="registerForm">
@@ -17,14 +17,12 @@
             <input type="password" id="password" name="password" required>
             <label for="role">Role:</label>
             <select id="role" name="role">
-                <option value="USER">User</option>
-                <option value="ADMIN">Admin</option>
-                <option value="SUPERADMIN">Superadmin</option>
+                <option value="USER" selected>User</option>
             </select>
             <button type="submit">Register</button>
         </form>
         <div id="registerError" class="error"></div>
     </div>
-    <script src="/static/register.js"></script>
+    <script src="register.js"></script>
 </body>
 </html>

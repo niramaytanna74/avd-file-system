@@ -31,7 +31,7 @@ public class BundleServiceImpl implements BundleService {
                 .id(bundle.getId())
                 .name(bundle.getName())
                 .uploadedBy(bundle.getUploadedBy().getId())
-                .groupId(bundle.getGroup().getId())
+                .groupId(bundle.getUserGroup().getId())
                 .fileIds(bundle.getFiles().stream().map(f -> f.getId()).collect(Collectors.toSet()))
                 .build();
     }

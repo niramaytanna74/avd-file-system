@@ -6,6 +6,66 @@ label { display: block; margin-top: 12px; }
 input, select, button { width: 100%; padding: 8px; margin-top: 4px; margin-bottom: 12px; }
 button { background: #007bff; color: #fff; border: none; border-radius: 4px; cursor: pointer; }
 button:hover { background: #0056b3; }
+button:disabled, .btn:disabled {
+    background: #ccc !important;
+    color: #888 !important;
+    cursor: not-allowed !important;
+    border: 1px solid #bbb !important;
+    opacity: 1;
+}
 .error { color: #c00; margin-top: 8px; }
 #fileList { margin-top: 16px; }
 .role-section { margin: 20px 0; padding: 12px; background: #e9ecef; border-radius: 6px; }
+
+/* Restrict small box style to login and register only */
+body.login-page .container,
+body.register-page .container {
+    max-width: 400px;
+    margin: 60px auto;
+    padding: 2em 2em 1em 2em;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.08);
+}
+
+/* For all other pages, use a wide container */
+body:not(.login-page):not(.register-page) .container {
+    max-width: 1200px;
+    margin: 40px auto;
+    padding: 2em 2em 1em 2em;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.04);
+}
+
+/* Center data in the container */
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Table styling for group-admin and dashboard */
+.group-table, .dashboard-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 1em;
+}
+.group-table th, .group-table td, .dashboard-table th, .dashboard-table td {
+    border: 1px solid #ccc;
+    padding: 10px 18px;
+    text-align: left;
+}
+.group-table th, .dashboard-table th {
+    background: #f5f5f5;
+}
+
+/* Responsive for smaller screens */
+@media (max-width: 700px) {
+    .container {
+        padding: 1em 0.5em 0.5em 0.5em;
+    }
+    .group-table, .dashboard-table {
+        font-size: 0.95em;
+    }
+}

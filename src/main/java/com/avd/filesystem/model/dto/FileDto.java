@@ -18,6 +18,6 @@ public class FileDto {
     private LocalDateTime clickTime;
     private String occasion;
     private Long uploadedBy;
-    private Long groupId;
+    private Long userGroupId;
     private Long bundleId;
 }

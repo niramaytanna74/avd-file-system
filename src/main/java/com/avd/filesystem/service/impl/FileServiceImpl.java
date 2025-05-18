@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
 @Transactional
 public class FileServiceImpl implements FileService {
     private final FileRepository fileRepository;
-    private final GroupRepository groupRepository;
+    private final UserGroupRepository groupRepository;
     private final UserRepository userRepository;
     private final BundleRepository bundleRepository;
     private final GrantedAccessRepository grantedAccessRepository;
@@ -30,8 +30,16 @@ public class FileServiceImpl implements FileService {
 
     @Override
     public FileDto uploadFile(MultipartFile file, FileDto fileDto, Long groupId) {
-        Group group = groupRepository.findById(groupId).orElseThrow();
+        UserGroup group = groupRepository.findById(groupId).orElseThrow();
         User uploader = userRepository.findById(fileDto.getUploadedBy()).orElseThrow();
+        // Allow SUPERADMIN to upload to any group
+        if (uploader.getRole() != User.Role.SUPERADMIN) {
+            boolean isMember = uploader.getUserGroupRoles().stream()
+                .anyMatch(role -> role.getUserGroup().getId().equals(groupId));
+            if (!isMember) {
+                throw new IllegalArgumentException("User is not a member of the selected group");
+            }
+        }
         String filePath = storeFile(file);
         File entity = File.builder()
                 .filename(file.getOriginalFilename())
@@ -43,7 +51,7 @@ public class FileServiceImpl implements FileService {
                 .clickTime(fileDto.getClickTime())
                 .occasion(fileDto.getOccasion())
                 .uploadedBy(uploader)
-                .group(group)
+                .userGroup(group)
                 .build();
         entity = fileRepository.save(entity);
         return toDto(entity);
@@ -51,12 +59,12 @@ public class FileServiceImpl implements FileService {
 
     @Override
     public List<FileDto> uploadBundle(List<MultipartFile> files, FileDto fileDto, Long groupId, String bundleName) {
-        Group group = groupRepository.findById(groupId).orElseThrow();
+        UserGroup group = groupRepository.findById(groupId).orElseThrow();
         User uploader = userRepository.findById(fileDto.getUploadedBy()).orElseThrow();
         Bundle bundle = Bundle.builder()
                 .name(bundleName)
                 .uploadedBy(uploader)
-                .group(group)
+                .userGroup(group)
                 .build();
         final Bundle savedBundle = bundleRepository.save(bundle);
         List<File> fileEntities = files.stream().map(f -> {
@@ -71,7 +79,7 @@ public class FileServiceImpl implements FileService {
                     .clickTime(fileDto.getClickTime())
                     .occasion(fileDto.getOccasion())
                     .uploadedBy(uploader)
-                    .group(group)
+                    .userGroup(group)
                     .bundle(savedBundle)
                     .build();
         }).collect(Collectors.toList());
@@ -88,7 +96,7 @@ public class FileServiceImpl implements FileService {
     public List<FileDto> getFiles(Long uploadedBy, Long groupId) {
         return fileRepository.findAll().stream()
                 .filter(f -> (uploadedBy == null || f.getUploadedBy().getId().equals(uploadedBy)) &&
-                             (groupId == null || f.getGroup().getId().equals(groupId)))
+                             (groupId == null || f.getUserGroup().getId().equals(groupId)))
                 .map(this::toDto)
                 .collect(Collectors.toList());
     }
@@ -112,7 +120,7 @@ public class FileServiceImpl implements FileService {
         if (file.getUploadedBy().getId().equals(user.getId())) return true;
         // 5. Admin of the group always has access
         boolean isAdmin = user.getUserGroupRoles().stream()
-                .anyMatch(r -> r.getGroup().getId().equals(file.getGroup().getId()) && r.getRole() == UserGroupRole.Role.ADMIN);
+                .anyMatch(r -> r.getUserGroup().getId().equals(file.getUserGroup().getId()) && r.getRole() == UserGroupRole.Role.ADMIN);
         if (isAdmin) return true;
         // 6. Check granted access (file or bundle)
         // (a) Direct file access
@@ -160,7 +168,7 @@ public class FileServiceImpl implements FileService {
                 .clickTime(file.getClickTime())
                 .occasion(file.getOccasion())
                 .uploadedBy(file.getUploadedBy().getId())
-                .groupId(file.getGroup().getId())
+                .groupId(file.getUserGroup().getId())
                 .bundleId(file.getBundle() != null ? file.getBundle().getId() : null)
                 .build();
     }
