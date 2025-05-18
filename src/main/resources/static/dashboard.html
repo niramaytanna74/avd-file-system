@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>FileSystem - Dashboard</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <h2>Welcome to FileSystem</h2>
+        <div id="roleSection"></div>
+        <div id="fileSection">
+            <h3>Upload File</h3>
+            <form id="uploadForm">
+                <input type="file" id="fileInput" name="file" required>
+                <input type="text" id="description" name="description" placeholder="Description">
+                <input type="text" id="fileType" name="fileType" placeholder="File Type">
+                <input type="text" id="clickLocation" name="clickLocation" placeholder="Click Location">
+                <input type="datetime-local" id="clickTime" name="clickTime" placeholder="Click Time">
+                <input type="text" id="occasion" name="occasion" placeholder="Occasion">
+                <button type="submit">Upload</button>
+            </form>
+            <div id="uploadMsg"></div>
+            <h3>Download Files</h3>
+            <div id="fileList"></div>
+        </div>
+    </div>
+    <script src="/static/dashboard.js"></script>
+</body>
+</html>

@@ -3,3 +3,7 @@ spring:
     url: jdbc:mysql://prod-db-url:3306/file_system_db
     username: prod_user
     password: prod_pass
+
+jwt:
+  secret: "your-very-secret-key"
+  expiration-ms: 86400000

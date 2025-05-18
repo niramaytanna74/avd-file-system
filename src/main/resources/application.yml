@@ -16,3 +16,7 @@ spring:
 
 server:
   port: 8080
+
+jwt:
+  secret: "your-very-secret-key"
+  expiration-ms: 86400000 # 1 day
