@@ -79,6 +79,14 @@ public class UserServiceImpl implements UserService {
         userRepository.save(user);
     }
 
+    @Override
+    public UserDto updateUserRole(Long userId, String role) {
+        User user = userRepository.findById(userId).orElseThrow();
+        user.setRole(User.Role.valueOf(role));
+        user = userRepository.save(user);
+        return toDto(user);
+    }
+
     private UserDto toDto(User user) {
         if (user == null) {
             return null;

@@ -51,6 +51,21 @@
                 <button type="button" id="cancelCreateGroup">Cancel</button>
             </form>
         </div>
+        <div id="changeRoleSection" style="display:none; margin-top:32px;">
+            <h3>Change User Role</h3>
+            <form id="changeRoleForm">
+                <label for="userSelect">Select User:</label>
+                <select id="userSelect" name="userId" required></select>
+                <label for="roleSelect">Select Role:</label>
+                <select id="roleSelect" name="role" required>
+                    <option value="USER">USER</option>
+                    <option value="ADMIN">ADMIN</option>
+                    <option value="SUPERADMIN">SUPERADMIN</option>
+                </select>
+                <button type="submit">Change Role</button>
+            </form>
+            <div id="changeRoleMsg"></div>
+        </div>
         <div id="adminAssignSection" style="display:none;">
             <h3>Assign Admin to Group</h3>
             <form id="assignAdminForm">

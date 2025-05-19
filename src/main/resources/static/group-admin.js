@@ -6,6 +6,7 @@ if (!jwt) window.location.href = 'login.html';
 function showSection(id) {
     document.getElementById('createGroupSection').style.display = 'none';
     document.getElementById('adminAssignSection').style.display = 'none';
+    document.getElementById('changeRoleSection').style.display = 'none';
     if (id) document.getElementById(id).style.display = '';
 }
 
@@ -144,6 +145,49 @@ assignAdminForm.onsubmit = function(e) {
         }
     });
 };
+
+// Show/hide change role section for superadmin
+fetch('/users/me', { headers: { 'Authorization': 'Bearer ' + jwt } })
+    .then(res => res.json())
+    .then(user => {
+        if (user.role === 'SUPERADMIN') {
+            document.getElementById('changeRoleSection').style.display = '';
+            // Populate user dropdown
+            fetch('/users', { headers: { 'Authorization': 'Bearer ' + jwt } })
+                .then(res => res.json())
+                .then(users => {
+                    const userSelect = document.getElementById('userSelect');
+                    userSelect.innerHTML = '';
+                    users.forEach(u => {
+                        const opt = document.createElement('option');
+                        opt.value = u.id;
+                        opt.textContent = u.username + (u.email ? ' (' + u.email + ')' : '') + ' [' + u.role + ']';
+                        userSelect.appendChild(opt);
+                    });
+                });
+        }
+    });
+
+// Handle change role form submit
+const changeRoleForm = document.getElementById('changeRoleForm');
+if (changeRoleForm) {
+    changeRoleForm.onsubmit = function(e) {
+        e.preventDefault();
+        const userId = document.getElementById('userSelect').value;
+        const role = document.getElementById('roleSelect').value;
+        fetch(`/users/${userId}/role?role=${role}`, {
+            method: 'PUT',
+            headers: { 'Authorization': 'Bearer ' + jwt }
+        })
+        .then(res => {
+            if (res.ok) {
+                document.getElementById('changeRoleMsg').textContent = 'Role updated!';
+            } else {
+                document.getElementById('changeRoleMsg').textContent = 'Failed to update role.';
+            }
+        });
+    };
+}
 
 // Initial load
 loadGroups();

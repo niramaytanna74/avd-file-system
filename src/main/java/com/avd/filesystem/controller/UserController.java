@@ -4,6 +4,7 @@ import com.avd.filesystem.model.dto.UserDto;
 import com.avd.filesystem.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
@@ -43,5 +44,12 @@ public class UserController {
         }
         // Optionally, return all users if no role param
         return ResponseEntity.ok(userService.getAllUsers());
+    }
+
+    @PutMapping("/{id}/role")
+    @PreAuthorize("hasRole('SUPERADMIN')")
+    public ResponseEntity<UserDto> updateUserRole(@PathVariable Long id, @RequestParam String role) {
+        UserDto updated = userService.updateUserRole(id, role);
+        return ResponseEntity.ok(updated);
     }
 }

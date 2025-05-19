@@ -111,6 +111,23 @@ uploadForm.addEventListener('submit', async (e) => {
 // Load files for download
 function loadFiles() {
     let currentUser = null;
+    const groupAdminCache = {};
+    async function isUserGroupAdmin(userId, groupId) {
+        if (!groupId) return false;
+        if (groupAdminCache[groupId]) {
+            return groupAdminCache[groupId].includes(userId);
+        }
+        try {
+            const res = await fetch(`/user-groups/${groupId}/admins`, { headers: { 'Authorization': 'Bearer ' + jwt } });
+            if (!res.ok) return false;
+            const admins = await res.json();
+            const adminIds = admins.map(a => a.id);
+            groupAdminCache[groupId] = adminIds;
+            return adminIds.includes(userId);
+        } catch {
+            return false;
+        }
+    }
     fetch('/users/me', { headers: { 'Authorization': 'Bearer ' + jwt } })
         .then(res => res.json())
         .then(user => {
@@ -121,12 +138,17 @@ function loadFiles() {
         .then(files => {
             const tbody = document.getElementById('fileTableBody');
             tbody.innerHTML = '';
-            files.forEach(f => {
+            files.forEach(async f => {
                 const userIsSuperadmin = currentUser.role === 'SUPERADMIN';
+                const userUploaded = f.uploadedBy === currentUser.id;
                 const userInGroup = currentUser.groupIds && currentUser.groupIds.includes(f.userGroupId);
-                if (userIsSuperadmin || userInGroup) {
-                    // Direct download for superadmin or group member
-                    addFileRow(f, '<button onclick="downloadFile(' + f.id + ', \'' + (f.filename || '') + '\')">Download</button>');
+                let userIsGroupAdmin = false;
+                if (userInGroup && !userIsSuperadmin && !userUploaded) {
+                    userIsGroupAdmin = await isUserGroupAdmin(currentUser.id, f.userGroupId);
+                }
+                if (userIsSuperadmin || userUploaded || userIsGroupAdmin) {
+                    // Use template literal for correct escaping
+                    addFileRow(f, `<button onclick="downloadFile(${f.id}, '${(f.filename || '').replace(/'/g, "\\'")}' )">Download</button>`);
                 } else {
                     // For others, check access request status for this file/user
                     fetch(`/access/requests?fileId=${f.id}&requestorId=${currentUser.id}`, { headers: { 'Authorization': 'Bearer ' + jwt } })
@@ -288,5 +310,14 @@ if (passwordForm) {
             const data = await res.json().catch(() => ({}));
             msgDiv.innerText = data.message || 'Failed to update password.';
         }
+    });
+}
+
+// Add logout button logic
+const logoutBtn = document.getElementById('logoutBtn');
+if (logoutBtn) {
+    logoutBtn.addEventListener('click', () => {
+        localStorage.removeItem('jwt');
+        window.location.href = 'login.html';
     });
 }

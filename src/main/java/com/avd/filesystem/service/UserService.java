@@ -14,4 +14,5 @@ public interface UserService {
     Optional<User> findByEmail(String email);
     List<UserDto> getAllUsers();
     void updatePassword(String username, String newPassword);
+    UserDto updateUserRole(Long userId, String role);
 }
