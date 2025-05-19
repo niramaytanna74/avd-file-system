@@ -23,6 +23,16 @@ public class AccessRequestController {
         return ResponseEntity.ok(accessRequestService.getAccessRequestsForAdmin(groupId));
     }
 
+    @GetMapping(value = "/requests", params = {"fileId", "requestorId"})
+    public ResponseEntity<List<AccessRequestDto>> getAccessRequestsByFileIdAndRequestorId(@RequestParam Long fileId, @RequestParam Long requestorId) {
+        return ResponseEntity.ok(accessRequestService.getAccessRequestsByFileIdAndRequestorId(fileId, requestorId));
+    }
+
+    @GetMapping("/requests/all")
+    public ResponseEntity<List<AccessRequestDto>> getAllAccessRequests() {
+        return ResponseEntity.ok(accessRequestService.getAllAccessRequests());
+    }
+
     @PutMapping("/requests/{id}/approve")
     public ResponseEntity<AccessRequestDto> approveRequest(@PathVariable Long id) {
         return ResponseEntity.ok(accessRequestService.approveRequest(id));

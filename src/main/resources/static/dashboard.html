@@ -22,7 +22,21 @@
             </form>
             <div id="uploadMsg"></div>
             <h3>Download Files</h3>
-            <div id="fileList"></div>
+            <table id="fileTable" class="styled-table">
+                <thead>
+                    <tr>
+                        <th>Filename</th>
+                        <th>Description</th>
+                        <th>Occasion</th>
+                        <th>Group ID</th>
+                        <th>Click Time</th>
+                        <th>Click Location</th>
+                        <th>Download</th>
+                    </tr>
+                </thead>
+                <tbody id="fileTableBody"></tbody>
+            </table>
+            <div id="fileList" style="display:none;"></div>
         </div>
         <div id="groupRequestSection" style="display:none; margin-top:24px;">
             <h3>Request to Join a Group</h3>
@@ -34,6 +48,16 @@
             <div id="groupRequestMsg"></div>
             <h4>Your Group Join Requests</h4>
             <div id="groupRequestStatus"></div>
+        </div>
+        <button id="showPasswordBtn" style="margin-top:32px;">Change Password</button>
+        <div id="passwordSection" style="margin-top:16px; display:none;">
+            <h3>Change Password</h3>
+            <form id="passwordForm">
+                <input type="password" id="oldPassword" name="oldPassword" placeholder="Old Password" required>
+                <input type="password" id="newPassword" name="newPassword" placeholder="New Password" required>
+                <button type="submit">Update Password</button>
+            </form>
+            <div id="passwordMsg"></div>
         </div>
     </div>
     <script src="dashboard.js"></script>

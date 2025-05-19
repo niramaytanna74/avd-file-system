@@ -60,6 +60,21 @@ body:not(.login-page):not(.register-page) .container {
     background: #f5f5f5;
 }
 
+/* Table styling for dashboard file table */
+#fileTable {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 1em;
+}
+#fileTable th, #fileTable td {
+    border: 1px solid #ccc;
+    padding: 10px 18px;
+    text-align: left;
+}
+#fileTable th {
+    background: #f5f5f5;
+}
+
 /* Responsive for smaller screens */
 @media (max-width: 700px) {
     .container {

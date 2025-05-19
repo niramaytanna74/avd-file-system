@@ -11,24 +11,32 @@ function loadAdminFiles() {
                 document.getElementById('adminAccessMsg').textContent = 'You are not an admin of any group.';
                 return;
             }
-            // For each group, load files
             const tbody = document.getElementById('adminFileTableBody');
             tbody.innerHTML = '';
             user.groupIds.forEach(groupId => {
-                fetch(`/files?groupId=${groupId}`, { headers: { 'Authorization': 'Bearer ' + jwt } })
+                // Fetch group info for name
+                fetch(`/user-groups/${groupId}`, { headers: { 'Authorization': 'Bearer ' + jwt } })
                     .then(res => res.json())
-                    .then(files => {
-                        files.forEach(f => {
-                            const tr = document.createElement('tr');
-                            tr.innerHTML = `
-                                <td>${f.id}</td>
-                                <td>${f.filename}</td>
-                                <td>${f.uploadedBy}</td>
-                                <td>${f.groupId}</td>
-                                <td><button onclick="grantAccess(${f.id})">Grant Access</button></td>
-                            `;
-                            tbody.appendChild(tr);
-                        });
+                    .then(group => {
+                        fetch(`/files?groupId=${groupId}`, { headers: { 'Authorization': 'Bearer ' + jwt } })
+                            .then(res => res.json())
+                            .then(files => {
+                                files.forEach(f => {
+                                    const tr = document.createElement('tr');
+                                    tr.innerHTML = `
+                                        <td>${f.id || ''}</td>
+                                        <td>${f.filename || ''}</td>
+                                        <td>${f.userGroupId || ''}</td>
+                                        <td>${f.description || ''}</td>
+                                        <td>${f.clickLocation || ''}</td>
+                                        <td>${f.clickTime || ''}</td>
+                                        <td>${f.occasion || ''}</td>
+                                        <td>${f.uploadedBy || ''}</td>
+                                        <td><button onclick="downloadFile(${f.id}, '${f.filename || ''}')">Download</button></td>
+                                    `;
+                                    tbody.appendChild(tr);
+                                });
+                            });
                     });
             });
         });
@@ -95,6 +103,85 @@ function loadAccessRequests() {
         });
 }
 
+// Load pending file access requests for admin's groups
+function loadFileAccessRequests() {
+    fetch('/users/me', { headers: { 'Authorization': 'Bearer ' + jwt } })
+        .then(res => res.json())
+        .then(user => {
+            if (!user.groupIds || user.groupIds.length === 0) return;
+            const tbody = document.getElementById('fileAccessRequestsTableBody');
+            tbody.innerHTML = '';
+            user.groupIds.forEach(function(groupId) {
+                fetch(`/access/requests?groupId=${groupId}`, { headers: { 'Authorization': 'Bearer ' + jwt } })
+                    .then(res => res.json())
+                    .then(function(requests) {
+                        requests.forEach(function(r) {
+                            const tr = document.createElement('tr');
+                            let actionButtons = '';
+                            if (r.status === 'APPROVED' || r.status === 'REJECTED') {
+                                actionButtons = `
+                                    <button disabled>Approve</button>
+                                    <button disabled>Reject</button>
+                                `;
+                            } else {
+                                actionButtons = `
+                                    <button onclick="approveFileAccessRequest(${r.id})">Approve</button>
+                                    <button onclick="rejectFileAccessRequest(${r.id})">Reject</button>
+                                `;
+                            }
+                            tr.innerHTML = `
+                                <td>${r.id}</td>
+                                <td>${r.fileName || r.fileId}</td>
+                                <td>${r.requestorName || r.requestorId}</td>
+                                <td>${r.status}</td>
+                                <td>${actionButtons}</td>
+                            `;
+                            tbody.appendChild(tr);
+                        });
+                    });
+            });
+        });
+}
+
+// Load all file access requests for superadmin
+function loadSuperadminFileAccessRequests() {
+    fetch('/users/me', { headers: { 'Authorization': 'Bearer ' + jwt } })
+        .then(res => res.json())
+        .then(user => {
+            if (user.role !== 'SUPERADMIN') return;
+            const tbody = document.getElementById('fileAccessRequestsTableBody');
+            tbody.innerHTML = '';
+            fetch('/access/requests', { headers: { 'Authorization': 'Bearer ' + jwt } })
+                .then(res => res.json())
+                .then(function(requests) {
+                    requests.forEach(function(r) {
+                        const tr = document.createElement('tr');
+                        let actionButtons = '';
+                        if (r.status === 'APPROVED' || r.status === 'REJECTED') {
+                            actionButtons = `
+                                <button disabled>Approve</button>
+                                <button disabled>Reject</button>
+                            `;
+                        } else {
+                            actionButtons = `
+                                <button onclick="approveFileAccessRequest(${r.id})">Approve</button>
+                                <button onclick="rejectFileAccessRequest(${r.id})">Reject</button>
+                            `;
+                        }
+                        tr.innerHTML = `
+                            <td>${r.id}</td>
+                            <td>${r.fileName || r.fileId}</td>
+                            <td>${r.requestorName || r.requestorId}</td>
+                            <td>${r.status}</td>
+                            <td>${r.requestedAt || ''}</td>
+                            <td>${actionButtons}</td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                });
+        });
+}
+
 window.approveRequest = function(requestId, adminId) {
     fetch(`/api/access-requests/${requestId}/approve?adminId=${adminId}`, {
         method: 'POST',
@@ -119,12 +206,65 @@ window.rejectRequest = function(requestId, adminId) {
     });
 };
 
+window.approveFileAccessRequest = function(requestId) {
+    fetch(`/access/requests/${requestId}/approve`, {
+        method: 'PUT',
+        headers: { 'Authorization': 'Bearer ' + jwt }
+    })
+    .then(res => res.json())
+    .then(function() {
+        loadFileAccessRequests();
+    });
+};
+
+window.rejectFileAccessRequest = function(requestId) {
+    fetch(`/access/requests/${requestId}/reject`, {
+        method: 'PUT',
+        headers: { 'Authorization': 'Bearer ' + jwt }
+    })
+    .then(res => res.json())
+    .then(function() {
+        loadFileAccessRequests();
+    });
+};
+
 // Placeholder for grant access logic
 function grantAccess(fileId) {
     alert('Grant access logic for file ID ' + fileId + ' goes here.');
 }
 
+// Add downloadFile function
+downloadFile = function(fileId, filename) {
+    fetch(`/files/${fileId}/download`, {
+        headers: { 'Authorization': 'Bearer ' + jwt }
+    })
+    .then(response => {
+        if (!response.ok) throw new Error('Download failed');
+        return response.blob();
+    })
+    .then(blob => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename || 'downloaded_file';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+    })
+    .catch(() => alert('File download failed.'));
+}
+
 // Initial load
+fetch('/users/me', { headers: { 'Authorization': 'Bearer ' + jwt } })
+    .then(res => res.json())
+    .then(user => {
+        if (user.role === 'SUPERADMIN') {
+            loadSuperadminFileAccessRequests();
+        } else {
+            loadFileAccessRequests();
+        }
+    });
 loadAdminFiles();
 loadAdminUsers();
 loadAccessRequests();

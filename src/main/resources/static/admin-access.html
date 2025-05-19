@@ -15,9 +15,13 @@
                 <thead>
                     <tr>
                         <th>ID</th>
-                        <th>Filename</th>
-                        <th>Uploader</th>
+                        <th>Name</th>
                         <th>Group</th>
+                        <th>Description</th>
+                        <th>Click Location</th>
+                        <th>Click Time</th>
+                        <th>Occasion</th>
+                        <th>Uploaded By</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -52,6 +56,21 @@
                     </tr>
                 </thead>
                 <tbody id="accessRequestsTableBody"></tbody>
+            </table>
+        </div>
+        <div id="fileAccessRequestsSection" style="margin-top:32px;">
+            <h3>Pending File Access Requests</h3>
+            <table id="fileAccessRequestsTable" class="dashboard-table">
+                <thead>
+                    <tr>
+                        <th>Request ID</th>
+                        <th>File Name</th>
+                        <th>Requested By</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="fileAccessRequestsTableBody"></tbody>
             </table>
         </div>
         <a href="dashboard.html">Back to Dashboard</a>

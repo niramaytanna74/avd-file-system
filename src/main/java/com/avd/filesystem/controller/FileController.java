@@ -2,7 +2,14 @@ package com.avd.filesystem.controller;
 
 import com.avd.filesystem.model.dto.FileDto;
 import com.avd.filesystem.service.FileService;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -12,14 +19,27 @@ import java.util.List;
 @RequestMapping("/files")
 @RequiredArgsConstructor
 public class FileController {
+    private static final Logger log = LoggerFactory.getLogger(FileController.class);
     private final FileService fileService;
 
-    @PostMapping("/upload")
+    @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> uploadFile(@RequestParam("file") MultipartFile file,
                                         @RequestParam("mode") String mode,
                                         @RequestParam("userGroupId") Long groupId,
-                                        @RequestPart("fileDto") FileDto fileDto,
+                                        @RequestParam("fileDto") String  fileDtoJson,
                                         @RequestParam(value = "bundleName", required = false) String bundleName) {
+        log.info("/upload called: file={}, mode={}, userGroupId={}, fileDto={}, bundleName={}",
+            file != null ? file.getOriginalFilename() : null, mode, groupId, fileDtoJson, bundleName);
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule());
+        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        FileDto fileDto;
+        try {
+            fileDto = objectMapper.readValue(fileDtoJson, FileDto.class);
+        } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+            log.error("Failed to parse fileDtoJson: {}", fileDtoJson, e);
+            return ResponseEntity.badRequest().body("Invalid fileDto JSON");
+        }
         if ("SINGLE".equalsIgnoreCase(mode)) {
             return ResponseEntity.ok(fileService.uploadFile(file, fileDto, groupId));
         } else if ("BUNDLE".equalsIgnoreCase(mode)) {

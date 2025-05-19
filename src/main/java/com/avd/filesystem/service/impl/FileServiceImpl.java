@@ -5,6 +5,8 @@ import com.avd.filesystem.model.entity.*;
 import com.avd.filesystem.repository.*;
 import com.avd.filesystem.service.FileService;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -21,26 +23,32 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Transactional
 public class FileServiceImpl implements FileService {
+    private static final Logger log = LoggerFactory.getLogger(FileServiceImpl.class);
     private final FileRepository fileRepository;
     private final UserGroupRepository groupRepository;
     private final UserRepository userRepository;
     private final BundleRepository bundleRepository;
     private final GrantedAccessRepository grantedAccessRepository;
+    private final AccessRequestRepository accessRequestRepository;
     private final String fileBasePath = "uploads"; // Should be configurable
 
     @Override
     public FileDto uploadFile(MultipartFile file, FileDto fileDto, Long groupId) {
+        log.info("uploadFile called: file={}, fileDto={}, groupId={}", file != null ? file.getOriginalFilename() : null, fileDto, groupId);
         UserGroup group = groupRepository.findById(groupId).orElseThrow();
+        log.info("FileDto: {}", fileDto.getUploadedBy());
         User uploader = userRepository.findById(fileDto.getUploadedBy()).orElseThrow();
         // Allow SUPERADMIN to upload to any group
         if (uploader.getRole() != User.Role.SUPERADMIN) {
             boolean isMember = uploader.getUserGroupRoles().stream()
                 .anyMatch(role -> role.getUserGroup().getId().equals(groupId));
             if (!isMember) {
+                log.warn("User {} is not a member of group {}", uploader.getId(), groupId);
                 throw new IllegalArgumentException("User is not a member of the selected group");
             }
         }
-        String filePath = storeFile(file);
+        String filePath = storeFile(file, group.getName(), uploader.getUsername());
+        log.info("File stored at: {}", filePath);
         File entity = File.builder()
                 .filename(file.getOriginalFilename())
                 .filePath(filePath)
@@ -54,11 +62,13 @@ public class FileServiceImpl implements FileService {
                 .userGroup(group)
                 .build();
         entity = fileRepository.save(entity);
+        log.info("File entity saved: {}", entity.getId());
         return toDto(entity);
     }
 
     @Override
     public List<FileDto> uploadBundle(List<MultipartFile> files, FileDto fileDto, Long groupId, String bundleName) {
+        log.info("uploadBundle called: files={}, fileDto={}, groupId={}, bundleName={}", files != null ? files.size() : 0, fileDto, groupId, bundleName);
         UserGroup group = groupRepository.findById(groupId).orElseThrow();
         User uploader = userRepository.findById(fileDto.getUploadedBy()).orElseThrow();
         Bundle bundle = Bundle.builder()
@@ -68,7 +78,8 @@ public class FileServiceImpl implements FileService {
                 .build();
         final Bundle savedBundle = bundleRepository.save(bundle);
         List<File> fileEntities = files.stream().map(f -> {
-            String filePath = storeFile(f);
+            String filePath = storeFile(f, group.getName(), uploader.getUsername());
+            log.info("Bundle file stored at: {}", filePath);
             return File.builder()
                     .filename(f.getOriginalFilename())
                     .filePath(filePath)
@@ -84,6 +95,7 @@ public class FileServiceImpl implements FileService {
                     .build();
         }).collect(Collectors.toList());
         fileRepository.saveAll(fileEntities);
+        log.info("Bundle files saved: {}", fileEntities.size());
         return fileEntities.stream().map(this::toDto).collect(Collectors.toList());
     }
 
@@ -124,8 +136,12 @@ public class FileServiceImpl implements FileService {
         if (isAdmin) return true;
         // 6. Check granted access (file or bundle)
         // (a) Direct file access
-        boolean hasFileAccess = grantedAccessRepository.findAll().stream()
-                .anyMatch(a -> a.getUser().getId().equals(user.getId()) && a.getFile() != null && a.getFile().getId().equals(fileId));
+        List<AccessRequest> accessRequests = accessRequestRepository.findByRequestorIdAndFileId(user.getId(), fileId);
+        if (accessRequests == null || accessRequests.isEmpty()) {
+            return false;
+        }
+        boolean hasFileAccess = accessRequests.stream()
+                .anyMatch(a -> a.getFile() != null && a.getFile().getId().equals(fileId) && a.getStatus() == AccessRequest.Status.APPROVED);
         if (hasFileAccess) return true;
         // (b) Bundle access
         if (file.getBundle() != null) {
@@ -143,11 +159,24 @@ public class FileServiceImpl implements FileService {
         return new java.io.File(file.getFilePath());
     }
 
-    private String storeFile(MultipartFile file) {
+    private String storeFile(MultipartFile file, String groupName, String username) {
         try {
-            Path dir = Paths.get(fileBasePath);
+            String originalName = file.getOriginalFilename();
+            if (originalName == null || originalName.isEmpty()) {
+                originalName = "upload";
+            }
+            String baseName = originalName;
+            String ext = "";
+            int dot = originalName.lastIndexOf('.');
+            if (dot > 0) {
+                baseName = originalName.substring(0, dot);
+                ext = originalName.substring(dot);
+            }
+            String timestamp = String.valueOf(System.currentTimeMillis());
+            String uniqueName = baseName + "_" + timestamp + ext;
+            Path dir = Paths.get(fileBasePath, groupName, username);
             if (!Files.exists(dir)) Files.createDirectories(dir);
-            Path filePath = dir.resolve(file.getOriginalFilename());
+            Path filePath = dir.resolve(uniqueName);
             try (FileOutputStream fos = new FileOutputStream(filePath.toFile())) {
                 fos.write(file.getBytes());
             }
@@ -168,7 +197,7 @@ public class FileServiceImpl implements FileService {
                 .clickTime(file.getClickTime())
                 .occasion(file.getOccasion())
                 .uploadedBy(file.getUploadedBy().getId())
-                .groupId(file.getUserGroup().getId())
+                .userGroupId(file.getUserGroup().getId())
                 .bundleId(file.getBundle() != null ? file.getBundle().getId() : null)
                 .build();
     }

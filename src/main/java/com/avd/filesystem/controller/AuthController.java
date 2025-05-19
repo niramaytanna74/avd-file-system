@@ -35,4 +35,16 @@ public class AuthController {
         String token = jwtTokenProvider.generateToken(authentication);
         return ResponseEntity.ok(Collections.singletonMap("token", token));
     }
+
+    @PostMapping("/update-password")
+    public ResponseEntity<?> updatePassword(@RequestParam String username,
+                                            @RequestParam String oldPassword,
+                                            @RequestParam String newPassword) {
+        // Authenticate user with old password
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(username, oldPassword)
+        );
+        userService.updatePassword(username, newPassword);
+        return ResponseEntity.ok(Collections.singletonMap("message", "Password updated successfully"));
+    }
 }

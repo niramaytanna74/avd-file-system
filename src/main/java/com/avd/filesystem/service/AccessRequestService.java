@@ -8,4 +8,6 @@ public interface AccessRequestService {
     List<AccessRequestDto> getAccessRequestsForAdmin(Long groupId);
     AccessRequestDto approveRequest(Long requestId);
     AccessRequestDto rejectRequest(Long requestId);
+    List<AccessRequestDto> getAllAccessRequests();
+    List<AccessRequestDto> getAccessRequestsByFileIdAndRequestorId(Long fileId, Long requestorId);
 }

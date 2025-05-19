@@ -3,6 +3,8 @@ package com.avd.filesystem.model.dto;
 import lombok.*;
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -15,6 +17,7 @@ public class FileDto {
     private Long fileSize;
     private String description;
     private String clickLocation;
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm")
     private LocalDateTime clickTime;
     private String occasion;
     private Long uploadedBy;
